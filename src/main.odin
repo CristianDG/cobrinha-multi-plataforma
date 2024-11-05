@@ -2,25 +2,28 @@ package main
 
 import "game"
 import "core:fmt"
+import "base:runtime"
 
 HOT_RELOAD :: #config(HOT_RELOAD, false)
 
-main :: proc() {
-  when ODIN_OS == .JS {
+import "platform_functions"
 
-  } else{
-    when HOT_RELOAD {
-      main_hot_reload()
-    } else {
-      main_static()
-    }
+main :: proc() {
+  when ODIN_OS != .JS {
+    main_native()
   }
-  fmt.println(ODIN_OS)
+}
+
+main_native :: proc() {
+  when HOT_RELOAD {
+    main_hot_reload()
+  } else {
+    main_static()
+  }
 }
 
 main_static :: proc() {
   for {
-    should_close := game.step(.3)
-    if should_close do break
+    if !game.step(.3) do break
   }
 }

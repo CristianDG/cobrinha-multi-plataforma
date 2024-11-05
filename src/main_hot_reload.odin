@@ -10,8 +10,11 @@ import "core:os"
 import "core:time"
 import "base:intrinsics"
 
+import "third_party:hot_reload"
+
+
 Lib :: struct {
-  step : proc(rawptr) -> bool,
+  step : proc(f64) -> bool,
   start_game : proc(),
   deinit : proc(),
 
@@ -27,6 +30,8 @@ Lib :: struct {
 }
 
 main_hot_reload :: proc() {
+  context.logger = log.create_console_logger()
+
   log.info("RUNNING WITH HOT RELOAD")
 
   // FIXME: colocar tracking allocator em outro lugar ou algo assim :+1:
@@ -57,37 +62,40 @@ main_hot_reload :: proc() {
   game : Lib
 
   // _count , ok_game := dynlib.initialize_symbols(&game, "./game.so")
-  _, ok_game := load_lib(&game, "./game.so")
+  _, ok_game := hot_reload.load_lib(&game, "./game.so")
   if !ok_game {
     log.errorf("could't load lib")
     return
   }
 
+  // FIXME(cristiandg): refazer
+  /*
   game.start_game()
-  memory, memory_size := game.memory(), game.memory_size()
+  memory, memory_size := game.game_memory(), game.game_memory_size()
   for {
-    new, ok_game := load_lib(&game, "./game.so")
+    new, ok_game := hot_reload.load_lib(&game, "./game.so")
     if !ok_game do break
 
     // TODO:
     if new {
       log.debug("new lib found, loading...")
 
-      if memory_size != game.memory_size() {
+      if memory_size != game.game_memory_size() {
         reset_tracking_allocator(&tracking_allocator)
         game.deinit_memory()
 
         game.init_memory()
-        memory = game.memory()
+        memory = game.game_memory()
       }
 
       game.reload_memory(memory)
-      memory, memory_size = game.memory(), game.memory_size()
+      memory, memory_size = game.game_memory(), game.game_memory_size()
     }
 
-    should_close := game.update(memory)
+    should_close := game.step(memory)
     if should_close do break
   }
   game.deinit()
   game.deinit_memory()
+  */
 }

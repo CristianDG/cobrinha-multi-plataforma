@@ -5,7 +5,7 @@
 : ${BUILDING_HOT_RELOAD="false"}
 : ${DEBUG_ECHO=0}
 # Targets: native, js_wasm
-: ${BUILD_TARGET=native}
+: ${BUILD_TARGET=js_wasm}
 : ${OUTPUT_FOLDER=bin}
 : ${FILE_NAME=out}
 
@@ -25,22 +25,31 @@ esac
 
 
 ROOT=$(pwd)
+echo $ROOT
 
-SHARED_FLAGS="-debug -collection:third_party=$ROOT/third_party -thread-count:4 -error-pos-style:unix -min-link-libs"
+SHARED_FLAGS="-debug -collection:third_party=$ROOT/third_party -collection:bin=$ROOT/bin -thread-count:4 -error-pos-style:unix -min-link-libs"
 
-build_lib ()
+build_game_so () # {{{
 {
-  [[ -z $1 ]] && echo "usage: build_lib <lib_name>" && exit 1
+  lib_name="game"
 
-  lib_name=$1
-
-  link_flags="-define:RAYLIB_SHARED=true -extra-linker-flags=\"-Wl,-rpath=./linux\""
+  link_flags="-extra-linker-flags=\"-Wl,-rpath=./linux\""
   flags="-build-mode:shared -no-entry-point $SHARED_FLAGS $link_flags"
 
-  odin build "$ROOT/src/$lib_name" -out:"$lib_name" $flags "${@:2}"
-}
+  odin build "$ROOT/src/$lib_name" -out:"$lib_name" $flags "${@}"
+} # }}}
 
-build_game ()
+build_platform_functions () # {{{
+{
+  lib_name="platform_functions"
+
+  flags="-build-mode:shared -no-entry-point $SHARED_FLAGS"
+
+  odin build "$ROOT/src/$lib_name" -out:"$lib_name" $flags "${@:2}"
+} # }}}
+
+
+build_game () # {{{
 {
   # TODO: mudar o nome pra quando o arquivo é static no lugar de hot reload
   # set -x
@@ -64,7 +73,7 @@ build_game ()
   fi
 
   odin build "$ROOT/src" -out:$FILE $flags $@ 
-}
+} # }}}
 
 clear_new_symbols () # {{{
 { 
@@ -83,7 +92,7 @@ pushd $OUTPUT_FOLDER > /dev/null
 
 if [[ $BUILDING_HOT_RELOAD == "true" ]]; then
   [[ $DEBUG_ECHO ]] && echo "building hot reload"
-  build_lib game && build_game
+  build_platform_functions && build_game_so && build_game
 else 
   [[ $DEBUG_ECHO ]] && echo "building static"
   build_game $@
