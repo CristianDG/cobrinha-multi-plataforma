@@ -55,10 +55,19 @@ Key :: enum u32 {
 
 Key_State :: bit_set[Key]
 
+// TODO: colocar em uma struct
 previous_key_state, current_key_state : Key_State
+
+// TODO: colocar em uma struct
+// TODO: trocar para `render_`
+window_width, window_height: i32
 
 is_key_down :: proc(k: Key) -> bool {
   return k in current_key_state
+}
+
+get_render_size :: proc() -> (width: i32, height: i32) {
+  return window_width, window_height
 }
 
 is_key_pressed :: proc(k: Key) -> bool {
@@ -69,10 +78,11 @@ is_key_pressed :: proc(k: Key) -> bool {
 
 camera_mvp : glm.mat4
 
-vertices := [2048]Vertex {}
+vertices := [2048 * 2]Vertex {}
 current_vertex := u32(0)
 
 init :: proc(name: string, width, height: i32) {
+  window_width, window_height = width, height
   camera_mvp = glm.mat4Ortho3d(0, f32(width), 0, f32(height), 1, -100)
   _init(name, width, height)
 }
@@ -107,7 +117,15 @@ get_ticks :: proc() -> u64 {
   return _get_ticks()
 }
 
-u8color_to_f32color :: proc(color: Color) -> [4]f32 {
+f32color_to_u8color :: proc "c" (r, g, b, a: f32) -> Color {
+  r := u8(r*255)
+  g := u8(g*255)
+  b := u8(b*255)
+  a := u8(a*255)
+  return {r, g, b, a}
+}
+
+u8color_to_f32color :: proc "c" (color: Color) -> [4]f32 {
   r := f32(color.r)/255
   g := f32(color.g)/255
   b := f32(color.b)/255

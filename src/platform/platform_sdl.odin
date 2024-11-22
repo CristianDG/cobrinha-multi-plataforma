@@ -49,9 +49,10 @@ create_shader :: proc(vertex_source, fragment_source: string) -> (u32, bool) {
   return gl.load_shaders_source(vertex_source, fragment_source)
 }
 
-clear_color :: proc(r, g, b, a: f32) {
+clear_color :: proc(c: Color) {
+  color := u8color_to_f32color(c)
   gl.Clear(gl.COLOR_BUFFER_BIT)
-  gl.ClearColor(r, g, b, a)
+  gl.ClearColor(color.r, color.g, color.b, color.a)
 }
 
 _get_ticks :: proc() -> u64 {

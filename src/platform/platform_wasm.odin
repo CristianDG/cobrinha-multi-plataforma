@@ -60,9 +60,10 @@ _init :: proc "c" (name: string, width, height: i32) {
 }
 
 
-@export clear_color :: proc "c" (r, g, b, a: f32) {
+@export clear_color :: proc "c" (c: Color) {
+  color := u8color_to_f32color(c)
   webgl.Clear(webgl.COLOR_BUFFER_BIT)
-  webgl.ClearColor(r, g, b, a)
+  webgl.ClearColor(color.r, color.g, color.b, color.a)
 }
 
 create_shader :: proc (vertex_source, fragment_source: string) -> (u32, bool) {
