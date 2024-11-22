@@ -6,7 +6,7 @@ import "base:runtime"
 
 HOT_RELOAD :: #config(HOT_RELOAD, false)
 
-import platform "platform_functions"
+import "platform"
 
 main :: proc() {
   when ODIN_OS != .JS {

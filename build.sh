@@ -94,7 +94,7 @@ if [[ $BUILDING_HOT_RELOAD == "true" ]]; then
   [[ $DEBUG_ECHO ]] && echo "building hot reload"
   build_platform_functions && build_game_so && build_game
 else 
-  [[ $DEBUG_ECHO ]] && echo "building static"
+  [[ $DEBUG_ECHO ]] && echo "building static $BUILD_TARGET"
   build_game $@
 fi
 
