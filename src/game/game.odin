@@ -3,6 +3,7 @@ package game
 import "core:fmt"
 import glm "core:math/linalg/glsl"
 import "core:math"
+import "core:math/rand"
 import platform "../platform"
 
 counter := u32(0)
@@ -63,19 +64,20 @@ draw_quad :: proc(x, y, size_x, size_y: f32, color: platform.Color) {
   platform.add_vertex(top_right)
 }
 
-pos_y := f32(300)
-pos_x := f32(300) 
+grid_cells_x :: 20
+grid_cells_y :: 20
 
 snake_color :: platform.Color{255, 128, 64, 255}
 fruit_color :: platform.Color{255, 255, 0, 255}
 grid_color  :: platform.Color{16, 32, 64, 255}
 
 
-grid_cells_x :: 20
-grid_cells_y :: 20
 snake := [grid_cells_x * grid_cells_y][2]i8{}
 snake_length := 1
-current_time : f64 = 0
+
+pos_y := f32(300)
+pos_x := f32(300) 
+current_time := f64(0)
 
 draw_game :: proc() {
   linhe_thickness := f32(3)
@@ -101,6 +103,13 @@ draw_game :: proc() {
       draw_quad(x_offset + f32(part.x) * cell_size, y_offset + f32(part.y) * cell_size, cell_size, cell_size, snake_color)
     }
   }
+  { // draw fruit
+    draw_quad(
+      x_offset + cell_size * f32(fruit.x),
+      y_offset + cell_size * f32(fruit.y),
+      cell_size, cell_size, fruit_color,
+    )
+  }
   { // draw grid
     for i in f32(0)..=grid_cells_x {
       draw_quad(x_offset + cell_size * i, y_offset, linhe_thickness, f32(height), grid_color)
@@ -121,10 +130,15 @@ Move :: enum u8 {
 last_move := Move.RIGHT
 current_move := last_move
 
+fruit := [2]i8{0, 0}
 update_paused := false
 
 // TODO: passar todo o estado do jogo
 update_game :: proc(move: Move) {
+
+  // NOTE: melhor fazer isso somente uma vez, no init, mas to com preguiça
+  rand.reset(u64(rand.int63()))
+
   move := move
   head := snake[0]
   { // cannot go 180
@@ -148,11 +162,23 @@ update_game :: proc(move: Move) {
     if head.x < 0 do head.x = grid_cells_x-1
     if head.y < 0 do head.y = grid_cells_y-1
   }
-  fruit := [2]i8{0, 0}
   { // fruit
     if head.x == fruit.x && head.y == fruit.y {
+
       snake[snake_length] = snake[snake_length-1]
       snake_length += 1
+
+      fruit_collides := true
+      for fruit_collides {
+        fruit.x = i8(rand.float32_range(0, grid_cells_x))
+        fruit.y = i8(rand.float32_range(0, grid_cells_y))
+
+        fruit_collides = false
+        for i in 0..<snake_length {
+          fruit_collides ||= fruit.x == snake[i].x && fruit.y == snake[i].y
+        }
+      }
+
     }
   }
   { // shift spots
