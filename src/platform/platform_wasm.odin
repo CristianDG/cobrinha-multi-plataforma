@@ -107,7 +107,7 @@ _end_drawing   :: proc() {
     mpv_loc := webgl.GetUniformLocation(program, "u_mvp")
     webgl.UniformMatrix4fv(mpv_loc, camera_mvp)
   }
-  webgl.DrawArrays(webgl.TRIANGLES, 0, int(current_vertex + 1))
+  webgl.DrawArrays(webgl.TRIANGLES, 0, int(current_vertex))
 }
 
 global_shader: u32
