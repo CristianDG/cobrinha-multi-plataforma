@@ -1,18 +1,11 @@
 package platform_functions
 
 import "core:fmt"
-
+import "core:mem"
 import glm "core:math/linalg/glsl"
 
 VERTEX_SHADER_SOURCE :: #load("../shaders/vs.glsl", string)
 FRAGMENT_SHADER_SOURCE :: #load("../shaders/fs.glsl", string)
-
-Vertex :: struct {
-  pos: [3]f32,
-  color: [4]f32,
-}
-
-Color :: [4]u8
 
 Key :: enum u32 {
   Unknown,
@@ -78,12 +71,25 @@ is_key_pressed :: proc(k: Key) -> bool {
 
 camera_mvp : glm.mat4
 
+Vertex :: struct {
+  pos: [3]f32,
+  color: [4]f32,
+}
+
+Color :: [4]u8
+
+// TODO: mover para o jogo
 vertices := [2048 * 2]Vertex {}
 current_vertex := u32(0)
 
+
+alloc_memory_buffer :: proc(bytes: u64) -> (buffer: []byte, err: mem.Allocator_Error) {
+  return _alloc_memory_buffer(bytes)
+}
+
 init :: proc(name: string, width, height: i32) {
   window_width, window_height = width, height
-  camera_mvp = glm.mat4Ortho3d(0, f32(width), 0, f32(height), 1, -100)
+  camera_mvp = glm.mat4Ortho3d(0, f32(width), 0, f32(height), -10, 100_000)
   _init(name, width, height)
 }
 

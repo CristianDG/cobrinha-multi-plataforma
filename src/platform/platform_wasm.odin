@@ -10,6 +10,7 @@ TODO:
 
 import "base:runtime"
 import "core:fmt"
+import "core:mem"
 import "core:sys/wasm/js"
 import webgl "vendor:wasm/WebGL"
 import glm "core:math/linalg/glsl"
@@ -73,6 +74,12 @@ create_shader :: proc (vertex_source, fragment_source: string) -> (u32, bool) {
 
 _update_key_state :: proc() {
   current_key_state = temp_key_state
+}
+
+_alloc_memory_buffer :: proc(bytes: u64) -> (buffer: []byte, err: mem.Allocator_Error) {
+  page_divisible := bytes % js.PAGE_SIZE == 0
+  pages := (int(bytes) / js.PAGE_SIZE) + (0 if page_divisible else 1)
+  return js.page_alloc(pages)
 }
 
 // TODO:

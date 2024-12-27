@@ -6,6 +6,9 @@ import "core:math"
 import "core:math/rand"
 import platform "../platform"
 
+// TODO: Game_State struct
+Game_State :: struct {}
+
 counter := u32(0)
 shader := u32(0)
 
@@ -14,6 +17,7 @@ exit := false
 @export
 init :: proc() {
   platform.init("screen", 640, 360)
+
   shader_ok: bool
   shader, shader_ok = platform.create_shader(
     platform.VERTEX_SHADER_SOURCE,
@@ -32,26 +36,26 @@ deinit :: proc() {
   platform.deinit()
 }
 
-draw_quad :: proc(x, y, size_x, size_y: f32, color: platform.Color) {
+draw_quad_with_transform :: proc(transform: glm.mat4, color: platform.Color) {
   color := platform.u8color_to_f32color(color)
-
-  half_size := [3]f32{size_x, size_y, 0} / 2
-  pos := [3]f32{x, y, 0} + half_size
+  transform := transform
+  transform *= glm.mat4Scale({.5, .5, 1})
+  transform *= glm.mat4Translate({1, 1, 0})
 
   top_left := platform.Vertex{
-    pos   = ({-1, +1, 0} * half_size + pos),
+    pos   = (transform * [?]f32{-1, +1, 0, 1}).xyz,
     color = color,
   }
   top_right := platform.Vertex{
-    pos   = ({+1, +1, 0} * half_size + pos),
+    pos   = (transform * [?]f32{+1, +1, 0, 1}).xyz,
     color = color,
   }
   bottom_left := platform.Vertex{
-    pos   = ({-1, -1, 0} * half_size + pos),
+    pos   = (transform * [?]f32{-1, -1, 0, 1}).xyz,
     color = color,
   }
   bottom_right := platform.Vertex{
-    pos   = ({+1, -1, 0} * half_size + pos),
+    pos   = (transform * [?]f32{+1, -1, 0, 1}).xyz,
     color = color,
   }
 
@@ -62,6 +66,17 @@ draw_quad :: proc(x, y, size_x, size_y: f32, color: platform.Color) {
   platform.add_vertex(bottom_left)
   platform.add_vertex(bottom_right)
   platform.add_vertex(top_right)
+}
+
+draw_quad :: proc(x, y, size_x, size_y: f32, color: platform.Color) {
+
+  transform : glm.mat4 = 1
+
+  transform *= glm.mat4Translate({x, y, 0})
+  transform *= glm.mat4Scale({size_x, size_y, 1})
+
+  draw_quad_with_transform(transform, color)
+
 }
 
 grid_cells_x :: 20
@@ -149,7 +164,7 @@ update_game :: proc(move: Move) {
       if move == .RIGHT && last_move == .LEFT do move = last_move
     }
   }
-  {
+  { // move the head
     switch move {
     case .UP:    head.y += 1
     case .DOWN:  head.y -= 1
@@ -178,24 +193,31 @@ update_game :: proc(move: Move) {
           fruit_collides ||= fruit.x == snake[i].x && fruit.y == snake[i].y
         }
       }
-
     }
   }
   { // shift spots
-
     for part_index := snake_length-1; part_index > 0; part_index -= 1 {
       snake[part_index] = snake[part_index-1]
     }
     snake[0] = head
-
   }
+  { // see if the head collides
+    for part in snake[1:snake_length] {
+      if head.x == part.x && head.y == part.y {
+        lost = true
+      }
+    }
+  }
+
   last_move = move
 }
 
+lost := false
 update_cooldown := f64(0)
 
 @export
 step :: proc(dt: f64) -> bool {
+  current_time += dt
   if !update_paused {
     update_cooldown += dt
   }

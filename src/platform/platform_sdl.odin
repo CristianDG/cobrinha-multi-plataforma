@@ -3,6 +3,7 @@ package platform_functions
 
 import "base:runtime"
 import "core:fmt"
+import "core:mem"
 import glm "core:math/linalg/glsl"
 import "core:strings"
 import sdl "vendor:sdl2"
@@ -56,7 +57,11 @@ clear_color :: proc(c: Color) {
 }
 
 _get_ticks :: proc() -> u64 {
-  return sdl.GetTicks64()
+  return u64(sdl.GetTicks())
+}
+
+_alloc_memory_buffer :: proc(bytes: u64) -> ([]u8, mem.Allocator_Error) {
+  unimplemented("WIP")
 }
 
 _update_key_state :: proc() {
